@@ -105,7 +105,8 @@ public class Target
 	
 	public static class Vulnerability
 	{
-		private String mIdentifier = null;
+		private String cve_id = null;
+		private String osvdb_id = null;
 		private double mSeverity   = 0;
 		private String mSummary	   = null;
 		
@@ -117,13 +118,22 @@ public class Target
 			String serialized = reader.readLine();
 			String[] parts	  = serialized.split( "\\|", 3 );
 			
-			mIdentifier = parts[0];
+			cve_id = parts[0];
+			mSeverity   = Double.parseDouble( parts[1] );
+			mSummary	= parts[2];
+		}
+		
+		public void from_osvdb( BufferedReader reader ) throws Exception {
+			String serialized = reader.readLine();
+			String[] parts	  = serialized.split( "\\|", 3 );
+			
+			osvdb_id = parts[0];
 			mSeverity   = Double.parseDouble( parts[1] );
 			mSummary	= parts[2];
 		}
 		
 		public String getIdentifier() {
-			return mIdentifier;
+			return cve_id;
 		}
 		
 		public double getSeverity() {
@@ -135,7 +145,7 @@ public class Target
 		}
 		
 		public void setIdentifier( String identifier ) {
-			this.mIdentifier = identifier;
+			this.cve_id = identifier;
 		}
 		
 		public void setSeverity( double severity ) {
@@ -147,7 +157,7 @@ public class Target
 		}		
 		
 		public String toString(){
-			return mIdentifier + "|" + mSeverity + "|" + mSummary;
+			return cve_id + "|" + mSeverity + "|" + mSummary;
 		}
 						
 		public String getHtmlColor( )
@@ -160,7 +170,21 @@ public class Target
 			
 			else
 				return "#FF0000";
-		}		
+		}	
+		
+		public static class Exploit
+		{
+			public String url;
+			public String name;
+		}
+		
+		public static class MsfExploit extends Exploit
+		{
+			public String msf_name;
+			public int payload_size;
+			//TODO: get payload_size
+			
+		}
 	}
 	
 	private Network 	mNetwork                              			 = null;
