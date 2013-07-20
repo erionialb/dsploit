@@ -15,7 +15,7 @@ public class MSFDatabase
 	//Search by cve
 	public static String search_by_cve( String query )
 	{
-		String result = "";
+		String msfdb_cve_result = "";
 		URLConnection  connection = null;
 				
 		try
@@ -42,7 +42,7 @@ public class MSFDatabase
 			if(i==0)
 				return null;
 			
-			result = location.substring(i+9);
+			msfdb_cve_result = location.substring(i+9);
 		
 		}	
 			
@@ -55,29 +55,32 @@ public class MSFDatabase
 			ioe.printStackTrace();
 		}
 		
-		return result;
+		return msfdb_cve_result;
 	
 	}
 	
 	
 		//Search by osvdb
-		public static String search_by_osvdb( String query )
+		public static String search_by_osvdb( int data )
 		{
-			String result = "";
+			String msfdb_osvdb_result = "";
+			String query;
 			URLConnection  connection = null;
 					
+			query = "osvdb=" + data; 
+			
 			try
 			{
-				query = "osvdb=" + URLEncoder.encode( query, "UTF-8" );
-			}
+				query = URLEncoder.encode( query, "UTF-8" );
+			}	
 			catch( UnsupportedEncodingException e )
 			{
-				query = "osvdb=" + URLEncoder.encode( query );
+				query = URLEncoder.encode( query );
 			}
 			
 			try
 			{
-				//http://www.metasploit.com/modules/framework/search?osvdb=18695
+				
 				URL obj = new URL("http://www.metasploit.com/modules/framework/search?" + query);
 				connection = obj.openConnection();
 				
@@ -91,7 +94,7 @@ public class MSFDatabase
 				if(i==0)
 					return null;
 				
-				result = location.substring(i+9);
+				msfdb_osvdb_result = location.substring(i+9);
 			
 			}	
 				
@@ -104,7 +107,7 @@ public class MSFDatabase
 				ioe.printStackTrace();
 			}
 			
-			return result;
+			return msfdb_osvdb_result;
 		
 		}
 	
