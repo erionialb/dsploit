@@ -109,20 +109,7 @@ public class NVDatabase
 					cve.setSeverity( Double.parseDouble( severities.get(i) ) );
 					
 					results.add( cve );
-				}
-				
-				Collections.sort( results, new Comparator<Vulnerability>(){
-				    public int compare( Vulnerability o1, Vulnerability o2 ) {
-				        if( o1.getSeverity() > o2.getSeverity() )
-				        	return -1;
-				        
-				        else if( o1.getSeverity() < o2.getSeverity() )
-				        	return 1;
-				        
-				        else 
-				        	return 0;
-				    }
-				});	
+				}	
 			}
 			else
 				results = null;

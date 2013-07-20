@@ -69,7 +69,7 @@ public class OSVDatabase
 		try
 		{
 			Matcher 		  matcher	  = null;		
-			ArrayList<String> 	vulns = new ArrayList<String>();
+			String vuln;
 			Vulnerability osv;
 			
 			connection = new URL( "http://osvdb.org/search/search?" + query ).openConnection();
@@ -84,50 +84,35 @@ public class OSVDatabase
 			if((matcher = VULN_PATTERN.matcher(body)) != null)
 			{
 				while(matcher.find())
-					vulns.add(matcher.group(1));
+				{
+					vuln = matcher.group(1);
+					osvdb_id  = Integer.parseInt(ID_PATTERN.matcher(vuln).group(1));
+					if((matcher = SUMMARY_PATTERN.matcher(vuln)) != null)
+					{
+						desc = matcher.group(1);
+					}
+					else
+					{
+						desc = SUMMARY2_PATTERN.matcher(vuln).group(1); 
+					}
+					if((matcher = DESC_PATTERN.matcher(vuln)) != null)
+					{
+						//TODO: test if a " - " goes well in graphics.
+						desc += " - " + matcher.group(1);
+					}
+					if((matcher = SEVERITY_PATTERN.matcher(vuln)) != null)
+					{
+						severity = Double.parseDouble(matcher.group(1));
+					}
+					else
+					{
+						severity = 0.0;
+					}
+					osv = new Vulnerability();
+					osv.from_osvdb(osvdb_id,severity,desc);
+					results.add(osv);
+				}
 			}
-			
-			for ( String vuln : vulns)
-			{
-				osvdb_id  = Integer.parseInt(ID_PATTERN.matcher(vuln).group(1));
-				if((matcher = SUMMARY_PATTERN.matcher(vuln)) != null)
-				{
-					desc = matcher.group(1);
-				}
-				else
-				{
-					desc = SUMMARY2_PATTERN.matcher(vuln).group(1); 
-				}
-				if((matcher = DESC_PATTERN.matcher(vuln)) != null)
-				{
-					//TODO: test if a " - " goes well in graphics.
-					desc += " - " + matcher.group(1);
-				}
-				if((matcher = SEVERITY_PATTERN.matcher(vuln)) != null)
-				{
-					severity = Double.parseDouble(matcher.group(1));
-				}
-				else
-				{
-					severity = 0.0;
-				}
-				osv = new Vulnerability();
-				osv.from_osvdb(osvdb_id,severity,desc);
-				results.add(osv);
-			}
-			
-			Collections.sort( results, new Comparator<Vulnerability>(){
-			    public int compare( Vulnerability o1, Vulnerability o2 ) {
-			        if( o1.getSeverity() > o2.getSeverity() )
-			        	return -1;
-			        
-			        else if( o1.getSeverity() < o2.getSeverity() )
-			        	return 1;
-			        
-			        else 
-			        	return 0;
-			    }
-			});
 		}
 		catch( MalformedURLException mue )
 		{
