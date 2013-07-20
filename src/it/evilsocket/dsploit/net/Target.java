@@ -106,7 +106,7 @@ public class Target
 	public static class Vulnerability
 	{
 		private String cve_id = null;
-		private String osvdb_id = null;
+		private int osvdb_id = 0;
 		private double mSeverity   = 0;
 		private String mSummary	   = null;
 		
@@ -123,13 +123,10 @@ public class Target
 			mSummary	= parts[2];
 		}
 		
-		public void from_osvdb( BufferedReader reader ) throws Exception {
-			String serialized = reader.readLine();
-			String[] parts	  = serialized.split( "\\|", 3 );
-			
-			osvdb_id = parts[0];
-			mSeverity   = Double.parseDouble( parts[1] );
-			mSummary	= parts[2];
+		public void from_osvdb( int id, double severity, String summary ) {
+			osvdb_id = id;
+			mSeverity   = severity;
+			mSummary	= summary;
 		}
 		
 		public String getIdentifier() {
