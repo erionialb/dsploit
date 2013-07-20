@@ -54,14 +54,16 @@ public class OSVDatabase
 		int osvdb_id;
 		String desc;
 		double severity;
-				
+		
+		query = "search[vuln_title]=" + query + APPEND_REQUEST;
+		
 		try
 		{
-			query = "search[vuln_title]=" + URLEncoder.encode( query, "UTF-8" ) + APPEND_REQUEST;
+			query = URLEncoder.encode( query, "UTF-8" );
 		}
 		catch( UnsupportedEncodingException e )
 		{
-			query = "search[vuln_title]=" + URLEncoder.encode( query ) + APPEND_REQUEST;
+			query = URLEncoder.encode( query );
 		}
 		
 		try
