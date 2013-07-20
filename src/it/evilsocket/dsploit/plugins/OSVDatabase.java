@@ -43,6 +43,8 @@ public class OSVDatabase
 	private final static Pattern SUMMARY2_PATTERN = Pattern.compile( "<td><a[^>]+>([^<]+)</a></td></tr>",	Pattern.MULTILINE | Pattern.DOTALL );
 	private final static Pattern DESC_PATTERN  	  = Pattern.compile( "<p id=\"desc[0-9]+\"[^>]+>([^<]+)",	Pattern.MULTILINE | Pattern.DOTALL );
 	private final static Pattern SEVERITY_PATTERN = Pattern.compile( "<td[^>]+>[0-9]{1,2}\\.[0-9]</td>",	Pattern.MULTILINE | Pattern.DOTALL );
+	private final static Pattern PAGES_PATTERN	  = Pattern.compile("<div class=\"pagination\">((?!</div>).)+", Pattern.MULTILINE | Pattern.DOTALL);
+	private final static Pattern PAGE_NUMS		  = Pattern.compile("page=([0-9]+)", Pattern.MULTILINE | Pattern.DOTALL);
 	private final static String  APPEND_REQUEST   = "&search[text_type]=alltext&search[s_date]=&search[e_date]=&search[refid]=&search[referencetypes]=&search[vendors]=&search[cvss_score_from]=&search[cvss_score_to]=&search[cvss_av]=*&search[cvss_ac]=*&search[cvss_a]=*&search[cvss_ci]=*&search[cvss_ii]=*&search[cvss_ai]=*&kthx=search";
 	
 	private static Vulnerability parse_vuln(String vuln)
@@ -80,16 +82,51 @@ public class OSVDatabase
 		return osv;
 	}
 	
+	private static int get_lastpage_index(String body)
+	{
+		Matcher matcher = null;
+		String tmp;
+		int i,j;
+		
+		if((matcher = PAGES_PATTERN.matcher(body)) == null)
+			return 0;
+		tmp = matcher.group(1);
+		if((matcher = PAGE_NUMS.matcher(tmp)) == null)
+			return 0;
+		i=0;
+		while(matcher.find())
+			if((j=Integer.parseInt(matcher.group(1))) > i)
+				i=j;
+		return i;
+	}
+	
+	private static String get_response(String query, int page) throws IOException
+	{
+		String line,body;
+		URLConnection connection;
+		BufferedReader reader;
+		body = "";
+		
+		if(page>0)
+			connection = new URL( "http://osvdb.org/search/search?" + query + "&page=" + page ).openConnection();
+		else
+			connection = new URL( "http://osvdb.org/search/search?" + query ).openConnection();
+		reader = new BufferedReader( new InputStreamReader( connection.getInputStream() ) );
+		while( ( line = reader.readLine() ) != null )
+		{
+			body += line;
+		}
+		
+		reader.close();
+		
+		return body;
+	}
+	
 	public static ArrayList<Vulnerability> search( String query )
 	{
 		ArrayList<Vulnerability> results = new ArrayList<Vulnerability>();
-		URLConnection  connection = null;
-		BufferedReader reader	  = null;
-		String		   line       = null,
-					   body		  = "";
-		int osvdb_id;
-		String desc;
-		double severity;
+		String		   body		  = "";
+		int cur_page,last_page;
 		
 		query = "search[vuln_title]=" + query + APPEND_REQUEST;
 		
@@ -104,19 +141,10 @@ public class OSVDatabase
 		
 		try
 		{
-			Matcher 		  matcher	  = null;		
-			String vuln;
-			Vulnerability osv;
-			
-			connection = new URL( "http://osvdb.org/search/search?" + query ).openConnection();
-			reader	   = new BufferedReader( new InputStreamReader( connection.getInputStream() ) );
-			
-			while( ( line = reader.readLine() ) != null )
-			{
-				body += line;
-			}
-			
-			reader.close();
+			Matcher 		  matcher	  = null;
+			cur_page=0;
+			body = get_response(query, cur_page);
+			last_page = get_lastpage_index(body);
 			if((matcher = VULN_PATTERN.matcher(body)) != null)
 			{
 				while(matcher.find())
@@ -127,7 +155,22 @@ public class OSVDatabase
 				{
 					results.add(parse_vuln(matcher.group(1)));
 				}
-				//TODO: go to next pages ( 1,2,3,4... )
+			}
+			cur_page++;
+			while(cur_page<last_page)
+			{
+				body=get_response(query, cur_page++);
+				if((matcher = VULN_PATTERN.matcher(body)) != null)
+				{
+					while(matcher.find())
+					{
+						results.add(parse_vuln(matcher.group(1)));
+					}
+					if((matcher = LAST_VULN_PATTERN.matcher(body)) != null)
+					{
+						results.add(parse_vuln(matcher.group(1)));
+					}
+				}
 			}
 		}
 		catch( MalformedURLException mue )
