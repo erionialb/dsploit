@@ -37,12 +37,48 @@ import java.util.regex.Pattern;
 public class OSVDatabase 
 {	
 	private final static Pattern VULN_PATTERN     = Pattern.compile( "<tr class=\"[oe][dv][de]n?\">(.(?!<tr class=\"[oe][dv][de]\"))+",		Pattern.MULTILINE | Pattern.DOTALL );
+	private final static Pattern LAST_VULN_PATTERN   = Pattern.compile( "<tr class=\"[oe][dv][de]n?\">(.(?!</tbody>))+",		Pattern.MULTILINE | Pattern.DOTALL );
 	private final static Pattern ID_PATTERN       = Pattern.compile( "<a href=\"/show/osvdb/([0-9]+)",		Pattern.MULTILINE | Pattern.DOTALL );
 	private final static Pattern SUMMARY_PATTERN  = Pattern.compile( "<td>([^<]+)</td></tr>",				Pattern.MULTILINE | Pattern.DOTALL );
 	private final static Pattern SUMMARY2_PATTERN = Pattern.compile( "<td><a[^>]+>([^<]+)</a></td></tr>",	Pattern.MULTILINE | Pattern.DOTALL );
 	private final static Pattern DESC_PATTERN  	  = Pattern.compile( "<p id=\"desc[0-9]+\"[^>]+>([^<]+)",	Pattern.MULTILINE | Pattern.DOTALL );
 	private final static Pattern SEVERITY_PATTERN = Pattern.compile( "<td[^>]+>[0-9]{1,2}\\.[0-9]</td>",	Pattern.MULTILINE | Pattern.DOTALL );
 	private final static String  APPEND_REQUEST   = "&search[text_type]=alltext&search[s_date]=&search[e_date]=&search[refid]=&search[referencetypes]=&search[vendors]=&search[cvss_score_from]=&search[cvss_score_to]=&search[cvss_av]=*&search[cvss_ac]=*&search[cvss_a]=*&search[cvss_ci]=*&search[cvss_ii]=*&search[cvss_ai]=*&kthx=search";
+	
+	private static Vulnerability parse_vuln(String vuln)
+	{
+		int osvdb_id;
+		Matcher matcher	= null;
+		String desc;
+		double severity;
+		Vulnerability osv;
+		
+		osvdb_id  = Integer.parseInt(ID_PATTERN.matcher(vuln).group(1));
+		if((matcher = SUMMARY_PATTERN.matcher(vuln)) != null)
+		{
+			desc = matcher.group(1);
+		}
+		else
+		{
+			desc = SUMMARY2_PATTERN.matcher(vuln).group(1); 
+		}
+		if((matcher = DESC_PATTERN.matcher(vuln)) != null)
+		{
+			//TODO: test if a " - " goes well in graphics.
+			desc += " - " + matcher.group(1);
+		}
+		if((matcher = SEVERITY_PATTERN.matcher(vuln)) != null)
+		{
+			severity = Double.parseDouble(matcher.group(1));
+		}
+		else
+		{
+			severity = 0.0;
+		}
+		osv = new Vulnerability();
+		osv.from_osvdb(osvdb_id,severity,desc);
+		return osv;
+	}
 	
 	public static ArrayList<Vulnerability> search( String query )
 	{
@@ -85,33 +121,13 @@ public class OSVDatabase
 			{
 				while(matcher.find())
 				{
-					vuln = matcher.group(1);
-					osvdb_id  = Integer.parseInt(ID_PATTERN.matcher(vuln).group(1));
-					if((matcher = SUMMARY_PATTERN.matcher(vuln)) != null)
-					{
-						desc = matcher.group(1);
-					}
-					else
-					{
-						desc = SUMMARY2_PATTERN.matcher(vuln).group(1); 
-					}
-					if((matcher = DESC_PATTERN.matcher(vuln)) != null)
-					{
-						//TODO: test if a " - " goes well in graphics.
-						desc += " - " + matcher.group(1);
-					}
-					if((matcher = SEVERITY_PATTERN.matcher(vuln)) != null)
-					{
-						severity = Double.parseDouble(matcher.group(1));
-					}
-					else
-					{
-						severity = 0.0;
-					}
-					osv = new Vulnerability();
-					osv.from_osvdb(osvdb_id,severity,desc);
-					results.add(osv);
+					results.add(parse_vuln(matcher.group(1)));
 				}
+				if((matcher = LAST_VULN_PATTERN.matcher(body)) != null)
+				{
+					results.add(parse_vuln(matcher.group(1)));
+				}
+				//TODO: go to next pages ( 1,2,3,4... )
 			}
 		}
 		catch( MalformedURLException mue )
