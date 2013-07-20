@@ -1,4 +1,7 @@
 package it.evilsocket.dsploit.plugins;
+
+import it.evilsocket.dsploit.net.Target.Vulnerability.MsfExploit;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -13,10 +16,12 @@ public class MSFDatabase
 	
 	
 	//Search by cve
-	public static String search_by_cve( String query )
+	public static MsfExploit search_by_cve( String query )
 	{
 		String msfdb_cve_result = "";
+		String location = null;
 		URLConnection  connection = null;
+		MsfExploit ex;
 				
 		try
 		{
@@ -32,7 +37,7 @@ public class MSFDatabase
 			URL obj = new URL("http://www.metasploit.com/modules/framework/search?" + query);
 			connection = obj.openConnection();
 			
-			String location = connection.getHeaderField("Location");
+			location = connection.getHeaderField("Location");
 			
 			if (location == null) {
 				return null;
@@ -55,18 +60,24 @@ public class MSFDatabase
 			ioe.printStackTrace();
 		}
 		
-		return msfdb_cve_result;
+		ex = new MsfExploit();
+		ex.url = location;
+		ex.msf_name = msfdb_cve_result;
+		ex.name = msfdb_cve_result.substring(msfdb_cve_result.lastIndexOf("/")+1);
+		return ex;
 	
 	}
 	
 	
 		//Search by osvdb
-		public static String search_by_osvdb( int data )
+		public static MsfExploit search_by_osvdb( int data )
 		{
 			String msfdb_osvdb_result = "";
 			String query;
 			URLConnection  connection = null;
-					
+			MsfExploit ex;
+			String location = null;
+			
 			query = "osvdb=" + data; 
 			
 			try
@@ -84,7 +95,7 @@ public class MSFDatabase
 				URL obj = new URL("http://www.metasploit.com/modules/framework/search?" + query);
 				connection = obj.openConnection();
 				
-				String location = connection.getHeaderField("Location");
+				location = connection.getHeaderField("Location");
 				
 				if (location == null) {
 					return null;
@@ -107,7 +118,11 @@ public class MSFDatabase
 				ioe.printStackTrace();
 			}
 			
-			return msfdb_osvdb_result;
+			ex = new MsfExploit();
+			ex.url = location;
+			ex.msf_name = msfdb_osvdb_result;
+			ex.name = msfdb_osvdb_result.substring(msfdb_osvdb_result.lastIndexOf("/")+1);
+			return ex;
 		
 		}
 	
