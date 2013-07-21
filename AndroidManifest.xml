@@ -101,7 +101,7 @@
         </activity>
         
         <activity
-            android:name=".plugins.ExploitSession"
+            android:name=".plugins.Sessions"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/title_activity_main"
             android:screenOrientation="landscape" >

@@ -1065,6 +1065,10 @@ public class System
 			plugin.onTargetNewExploit( getCurrentTarget(), ex );
 		}
 	}
+	
+	public static ArrayList<Exploit> getCurrentExploits() {
+		return getCurrentTarget().getExploits();
+	}
 
 	public static String getGatewayAddress() {
 		return mNetwork.getGatewayAddress().getHostAddress();

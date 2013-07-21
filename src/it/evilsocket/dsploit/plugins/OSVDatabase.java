@@ -21,8 +21,6 @@ package it.evilsocket.dsploit.plugins;
 import it.evilsocket.dsploit.net.Target.Vulnerability;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -31,12 +29,9 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import android.os.Environment;
 import android.util.Log;
 
 public class OSVDatabase 
@@ -44,7 +39,7 @@ public class OSVDatabase
 	private final static Pattern ID_PATTERN       = Pattern.compile( "<a href=\"/show/osvdb/([0-9]+)",		Pattern.MULTILINE | Pattern.DOTALL );
 	private final static Pattern SUMMARY_PATTERN  = Pattern.compile( "[0-9]{4}-[0-9]{2}-[0-9]{2}</td><td>(<a[^>]*>)?([^<]+)",		Pattern.MULTILINE | Pattern.DOTALL );
 	private final static Pattern DESC_PATTERN  	  = Pattern.compile( "<p id=\"desc[0-9]+\"[^>]+>([^<]*)",	Pattern.MULTILINE | Pattern.DOTALL );
-	private final static Pattern SEVERITY_PATTERN = Pattern.compile( "<td[^>]+>([0-9]{1,2}\\.[0-9])?</td>",	Pattern.MULTILINE | Pattern.DOTALL );
+	//private final static Pattern SEVERITY_PATTERN = Pattern.compile( "<td[^>]+>([0-9]{1,2}\\.[0-9])?</td>",	Pattern.MULTILINE | Pattern.DOTALL );
 	private final static Pattern PAGES_PATTERN	  = Pattern.compile("<div class=\"pagination\">((?!</div>).)+", Pattern.MULTILINE | Pattern.DOTALL);
 	private final static Pattern PAGE_NUMS		  = Pattern.compile("page=([0-9]+)", Pattern.MULTILINE | Pattern.DOTALL);
 	private final static String  APPEND_REQUEST   = "&search[text_type]=alltext&search[s_date]=&search[e_date]=&search[refid]=&search[referencetypes]=&search[vendors]=&search[cvss_score_from]=&search[cvss_score_to]=&search[cvss_av]=*&search[cvss_ac]=*&search[cvss_a]=*&search[cvss_ci]=*&search[cvss_ii]=*&search[cvss_ai]=*&kthx=search";

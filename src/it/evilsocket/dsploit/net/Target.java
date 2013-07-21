@@ -182,6 +182,7 @@ public class Target
 		public String name;
 		public String msf_name;
 		public int payload_size;
+		public boolean started = false;
 		//TODO: get payload_size
 		
 		public String toString()

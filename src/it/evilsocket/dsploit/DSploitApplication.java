@@ -24,7 +24,7 @@ import com.bugsense.trace.BugSenseHandler;
 
 import it.evilsocket.dsploit.core.System;
 import it.evilsocket.dsploit.plugins.ExploitFinder;
-import it.evilsocket.dsploit.plugins.ExploitSession;
+import it.evilsocket.dsploit.plugins.Sessions;
 import it.evilsocket.dsploit.plugins.VulnerabilityFinder;
 import it.evilsocket.dsploit.plugins.Inspector;
 import it.evilsocket.dsploit.plugins.LoginCracker;
@@ -73,7 +73,7 @@ public class DSploitApplication extends Application
         System.registerPlugin( new VulnerabilityFinder( ) );
         System.registerPlugin( new ExploitFinder( ) );
         System.registerPlugin( new LoginCracker( ) );
-        System.registerPlugin( new ExploitSession( ) );
+        System.registerPlugin( new Sessions( ) );
         System.registerPlugin( new MITM( ) );
         System.registerPlugin( new PacketForger( ) );
         		
