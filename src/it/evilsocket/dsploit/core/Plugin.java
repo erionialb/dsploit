@@ -25,6 +25,7 @@ import android.content.Context;
 import android.os.Bundle;
 import it.evilsocket.dsploit.R;
 import it.evilsocket.dsploit.net.Target;
+import it.evilsocket.dsploit.net.Target.Exploit;
 import it.evilsocket.dsploit.net.Target.Port;
 import it.evilsocket.dsploit.net.Target.Vulnerability;
 
@@ -117,6 +118,10 @@ public abstract class Plugin extends SherlockActivity
 	}
 	
 	public void onTargetNewVulnerability( Target target, Port port, Vulnerability vulnerability ) {
+		
+	}
+
+	public void onTargetNewExploit( Target target, Exploit ex ) {
 		
 	}
 }

@@ -105,8 +105,8 @@ public class Target
 	
 	public static class Vulnerability
 	{
-		private String cve_id = null;
-		private int osvdb_id = 0;
+		public String cve_id = null;
+		public int osvdb_id = 0;
 		private double mSeverity   = 0;
 		private String mSummary	   = null;
 		
@@ -130,7 +130,10 @@ public class Target
 		}
 		
 		public String getIdentifier() {
-			return cve_id;
+			if(osvdb_id>0)
+				return Integer.toString(osvdb_id);
+			else
+				return cve_id;
 		}
 		
 		public double getSeverity() {
@@ -154,7 +157,10 @@ public class Target
 		}		
 		
 		public String toString(){
-			return cve_id + "|" + mSeverity + "|" + mSummary;
+			if(osvdb_id>0)
+				return Integer.toString(osvdb_id) + "|" + mSeverity + "|" + mSummary;
+			else
+				return cve_id + "|" + mSeverity + "|" + mSummary;
 		}
 						
 		public String getHtmlColor( )
@@ -167,20 +173,22 @@ public class Target
 			
 			else
 				return "#FF0000";
-		}	
-		
-		public static class Exploit
-		{
-			public String url;
-			public String name;
 		}
+	}
+	
+	public static class Exploit
+	{
+		public String url;
+		public String name;
+		public String msf_name;
+		public int payload_size;
+		//TODO: get payload_size
 		
-		public static class MsfExploit extends Exploit
+		public String toString()
 		{
-			public String msf_name;
-			public int payload_size;
-			//TODO: get payload_size
-			
+			if(msf_name!=null)
+				return msf_name;
+			return name;
 		}
 	}
 	
@@ -195,6 +203,7 @@ public class Target
 	private String		mDeviceOS										 = null;
 	private String		mAlias											 = null;
 	private HashMap< String, ArrayList<Vulnerability> > mVulnerabilities = new HashMap< String, ArrayList<Vulnerability> >();
+	private ArrayList<Exploit> exploits = new ArrayList<Target.Exploit>();
 	
 	public static Target getFromString( String string ){
 		final Pattern PARSE_PATTERN = Pattern.compile( "^(([a-z]+)://)?([0-9a-z\\-\\.]+)(:([\\d]+))?[0-9a-z\\-\\./]*$", Pattern.CASE_INSENSITIVE );
@@ -658,6 +667,10 @@ public class Target
 		return false;
 	}
 	
+	public boolean hasVulnerabilities() {
+		return !mVulnerabilities.isEmpty();
+	}
+	
 	public boolean hasOpenPort( int port ) {
 		for( Port p : mPorts ) {
 			if( p.number == port )
@@ -700,5 +713,25 @@ public class Target
 	
 	public HashMap< String, ArrayList< Vulnerability > > getVulnerabilities() {
 		return mVulnerabilities;
+	}
+	
+	public ArrayList<Exploit> getExploits()
+	{
+		return exploits;
+	}
+	
+	public void addExploit(Exploit ex)
+	{
+		exploits.add(ex);
+	}
+	
+	public void addExploits(ArrayList<Exploit> exs)
+	{
+		exploits.addAll(exs);
+	}
+	
+	public void delExploit(Exploit ex)
+	{
+		exploits.remove(ex);
 	}
 }

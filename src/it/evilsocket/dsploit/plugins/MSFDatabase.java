@@ -1,6 +1,6 @@
 package it.evilsocket.dsploit.plugins;
 
-import it.evilsocket.dsploit.net.Target.Vulnerability.MsfExploit;
+import it.evilsocket.dsploit.net.Target.Exploit;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -16,25 +16,16 @@ public class MSFDatabase
 	
 	
 	//Search by cve
-	public static MsfExploit search_by_cve( String query )
+	public static Exploit search_by_cve( String query )
 	{
 		String msfdb_cve_result = "";
 		String location = null;
 		URLConnection  connection = null;
-		MsfExploit ex;
-				
-		try
-		{
-			query = "cve=" + URLEncoder.encode( query, "UTF-8" );
-		}
-		catch( UnsupportedEncodingException e )
-		{
-			query = "cve=" + URLEncoder.encode( query );
-		}
+		Exploit ex;
 		
 		try
 		{
-			URL obj = new URL("http://www.metasploit.com/modules/framework/search?" + query);
+			URL obj = new URL("http://www.metasploit.com/modules/framework/search?cve=" + query);
 			connection = obj.openConnection();
 			
 			location = connection.getHeaderField("Location");
@@ -60,7 +51,7 @@ public class MSFDatabase
 			ioe.printStackTrace();
 		}
 		
-		ex = new MsfExploit();
+		ex = new Exploit();
 		ex.url = location;
 		ex.msf_name = msfdb_cve_result;
 		ex.name = msfdb_cve_result.substring(msfdb_cve_result.lastIndexOf("/")+1);
@@ -70,29 +61,17 @@ public class MSFDatabase
 	
 	
 		//Search by osvdb
-		public static MsfExploit search_by_osvdb( int data )
+		public static Exploit search_by_osvdb( int data )
 		{
 			String msfdb_osvdb_result = "";
-			String query;
 			URLConnection  connection = null;
-			MsfExploit ex;
+			Exploit ex;
 			String location = null;
-			
-			query = "osvdb=" + data; 
-			
-			try
-			{
-				query = URLEncoder.encode( query, "UTF-8" );
-			}	
-			catch( UnsupportedEncodingException e )
-			{
-				query = URLEncoder.encode( query );
-			}
 			
 			try
 			{
 				
-				URL obj = new URL("http://www.metasploit.com/modules/framework/search?" + query);
+				URL obj = new URL("http://www.metasploit.com/modules/framework/search?osvdb=" + data);
 				connection = obj.openConnection();
 				
 				location = connection.getHeaderField("Location");
@@ -118,7 +97,7 @@ public class MSFDatabase
 				ioe.printStackTrace();
 			}
 			
-			ex = new MsfExploit();
+			ex = new Exploit();
 			ex.url = location;
 			ex.msf_name = msfdb_osvdb_result;
 			ex.name = msfdb_osvdb_result.substring(msfdb_osvdb_result.lastIndexOf("/")+1);

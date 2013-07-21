@@ -74,6 +74,7 @@ import it.evilsocket.dsploit.net.Endpoint;
 import it.evilsocket.dsploit.net.Network;
 import it.evilsocket.dsploit.net.Target;
 import it.evilsocket.dsploit.net.Network.Protocol;
+import it.evilsocket.dsploit.net.Target.Exploit;
 import it.evilsocket.dsploit.net.Target.Port;
 import it.evilsocket.dsploit.net.Target.Type;
 import it.evilsocket.dsploit.net.Target.Vulnerability;
@@ -1054,6 +1055,14 @@ public class System
 		
 		for( Plugin plugin : getPluginsForTarget() ) {
 			plugin.onTargetNewVulnerability( getCurrentTarget(), port, v );
+		}
+	}
+	
+	public static void addExploit( Exploit ex ) {
+		getCurrentTarget().addExploit(ex);
+		
+		for( Plugin plugin : getPluginsForTarget() ) {
+			plugin.onTargetNewExploit( getCurrentTarget(), ex );
 		}
 	}
 

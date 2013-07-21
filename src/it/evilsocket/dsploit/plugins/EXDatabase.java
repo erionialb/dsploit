@@ -12,43 +12,24 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import it.evilsocket.dsploit.net.Target.Vulnerability.Exploit;
+import it.evilsocket.dsploit.net.Target.Exploit;
 
 public class EXDatabase
 {
-	private final static Pattern EX_PATTERN = Pattern.compile( "<tr class=\"list_explot_description\">[^<]*<a href=\"([^\"]+)\">([^<]+)",		Pattern.MULTILINE | Pattern.DOTALL );
+	private final static Pattern EX_PATTERN = Pattern.compile( "<td class=\"list_explot_description\"[^>]*><a href=\"([^\"]+)\">([^<]+)",		Pattern.MULTILINE | Pattern.DOTALL );
 	
-	public static ArrayList<Exploit> search_by_osvdb( int id )
+	private static ArrayList<Exploit> search(String query)
 	{
 		ArrayList<Exploit> upshots = new ArrayList<Exploit>();
-		
+		Exploit exp;
 		URLConnection  connection = null;
 		BufferedReader reader	  = null;
 		String		   line       = null,
 					   body		  = "";
-
-		String query;
-		Exploit exp;
-		
-		//<a href="http://www.exploit-db.com/exploits/26517">Microsoft Office PowerPoint 2007 - Crash PoC</a>
-		
-		query = "action=search&filter_exploit_text=" + id; //the query that defines the string after the ? 
 		
 		try
 		{
-			query = URLEncoder.encode( query, "UTF-8" );
-		}
-		catch( UnsupportedEncodingException e )
-		{
-			query = URLEncoder.encode( query );
-		}
-		
-		//http://www.exploit-db.com/search/?action=search&filter_exploit_text=%27
-			
-		try
-		{
-			Matcher 		  matcher	  = null;		
-			
+			Matcher 		  matcher	  = null;
 			
 			connection = new URL( "http://www.exploit-db.com/search/?" + query ).openConnection();
 			reader	   = new BufferedReader( new InputStreamReader( connection.getInputStream() ) );
@@ -64,8 +45,8 @@ public class EXDatabase
 				while(matcher.find())
 				{
 					exp = new Exploit();
-					exp.name = matcher.group(1);
-					exp.url = matcher.group(2);
+					exp.name = matcher.group(2);
+					exp.url = matcher.group(1);
 					upshots.add(exp);
 				}
 			}
@@ -81,5 +62,29 @@ public class EXDatabase
 		}
 		
 		return upshots;
+	}
+	
+	public static ArrayList<Exploit> search_by_osvdb( int id )
+	{
+		try
+		{
+			return search("action=search&filter_cve=" + URLEncoder.encode( Integer.toString(id), "UTF-8" ));
+		}
+		catch( UnsupportedEncodingException e )
+		{
+			return search("action=search&filter_cve="+ URLEncoder.encode( Integer.toString(id) ));
+		}
+	}
+	
+	public static ArrayList<Exploit> search_by_cveid( String id )
+	{
+		try
+		{
+			return search("action=search&filter_cve=" + URLEncoder.encode( id, "UTF-8" ));
+		}
+		catch( UnsupportedEncodingException e )
+		{
+			return search("action=search&filter_cve="+ URLEncoder.encode( id ));
+		}
 	}
 }
