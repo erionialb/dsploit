@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -56,9 +57,10 @@ public class EXDatabase
 		{
 			mue.printStackTrace();
 		}
-		catch( IOException ioe )
+		catch( IOException ioe ) // 404
 		{
-			ioe.printStackTrace();
+			return null;
+			//ioe.printStackTrace();
 		}
 		
 		return upshots;
@@ -68,11 +70,11 @@ public class EXDatabase
 	{
 		try
 		{
-			return search("action=search&filter_cve=" + URLEncoder.encode( Integer.toString(id), "UTF-8" ));
+			return search("action=search&filter_osvdb=" + URLEncoder.encode( Integer.toString(id), "UTF-8" ));
 		}
 		catch( UnsupportedEncodingException e )
 		{
-			return search("action=search&filter_cve="+ URLEncoder.encode( Integer.toString(id) ));
+			return search("action=search&filter_osvdb="+ URLEncoder.encode( Integer.toString(id) ));
 		}
 	}
 	

@@ -11,32 +11,31 @@ public class MSFDatabase
 {	
 	private static Exploit search( String encoded_query )
 	{
-		String msfdb_osvdb_result = "";
+		String query = null;
 		URLConnection  connection = null;
 		Exploit ex = null;
-		String location = null;
+		String new_location = null;
 		
 		try
 		{
-			
-			URL obj = new URL("http://www.metasploit.com/modules/framework/search?" + encoded_query);
+			query = "http://www.metasploit.com/modules/framework/search?" + encoded_query;
+			URL obj = new URL(query);
 			connection = obj.openConnection();
+			connection.getHeaderField("Location"); // this will resolve connection
+			new_location = connection.getURL().toString(); 
 			
-			location = connection.getHeaderField("Location");
-			
-			if (location == null) {
+			if (new_location.equals(query)) {
 				return null;
 			}
-			int i = location.indexOf("/modules/");
+			int i = new_location.indexOf("/modules/");
 			
 			if(i<0)
 				return null;
 			
-			msfdb_osvdb_result = location.substring(i+9);
 			ex = new Exploit();
-			ex.url = location;
-			ex.msf_name = msfdb_osvdb_result;
-			ex.name = msfdb_osvdb_result.substring(msfdb_osvdb_result.lastIndexOf("/")+1);
+			ex.url = new_location;
+			ex.msf_name = new_location.substring(i+9);
+			ex.name = ex.msf_name.substring(ex.msf_name.lastIndexOf("/")+1);
 		}
 		catch( MalformedURLException mue )
 		{

@@ -5,3 +5,6 @@ make icons for exploit item , one for MSF exploits, one for exploitDB one.
 make icon for started exploit items.
 edit exploit finder layout ( long press => edit exploit options; click => launch exploit)
 make sessions layout ( we have to make a shell interface, file explorer and something else... )
+get osvdb score
+speed up (vulnerabylity|exploit) search 
+use nmap XML output, which provide services versions and extra data
