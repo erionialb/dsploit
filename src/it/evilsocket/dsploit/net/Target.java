@@ -191,6 +191,14 @@ public class Target
 				return msf_name;
 			return name;
 		}
+
+		public int getDrawableResourceId() {
+			return R.drawable.target_endpoint;
+		}
+
+		public String getDescription() {
+			return url;
+		}
 	}
 	
 	private Network 	mNetwork                              			 = null;

@@ -43,7 +43,7 @@ public class Sessions extends Plugin
 		    "Sessions", 
 		    "Sessions on pwned target.", 
 		    new Target.Type[]{ Target.Type.ENDPOINT, Target.Type.REMOTE }, 
-		    R.layout.plugin_sessions,
+		    R.layout.plugin_sessions_layout,
 		    R.drawable.action_session 
 		);
 	}
@@ -57,25 +57,26 @@ public class Sessions extends Plugin
 		}
 	});
 	
+	@Override
 	public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         int nEx,i;
         
         i=nEx=0;
-        if( System.getCurrentTarget().hasOpenPorts() == false )
-        	new FinishDialog( "Warning", "No open ports detected on current target, run the service inspector first.", this ).show();
-        
-        else if( (nEx = System.getCurrentTarget().getExploits().size()) == 0)
-        	new FinishDialog( "Warning", "No exploits found on this target, run the ExploitFinder first.", this ).show();
-                
+        nEx = System.getCurrentTarget().getExploits().size();
         for(i=0;i<nEx;i++)
         {
         	if(System.getCurrentExploits().get(i).started)
         		break;
         }
-        if(i>=nEx)
+        
+        if( System.getCurrentTarget().hasOpenPorts() == false )
+        	new FinishDialog( "Warning", "No open ports detected on current target, run the service inspector first.", this ).show();
+        else if( nEx == 0)
+        	new FinishDialog( "Warning", "No exploits found on this target, run the ExploitFinder first.", this ).show();
+        else if(i>=nEx)
         	new FinishDialog( "Warning", "No exploit has been started.", this ).show();
-        mListView		   = ( ListView )findViewById( R.id.searchListView );
+        mListView		   = ( ListView )findViewById( android.R.id.list );
         mAdapter		   = new ArrayAdapter<Exploit>(this, android.R.layout.simple_list_item_1, results);
         
         mAdapter.clear();
