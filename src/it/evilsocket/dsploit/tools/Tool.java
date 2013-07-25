@@ -25,6 +25,7 @@ import it.evilsocket.dsploit.core.Shell.OutputReceiver;
 import java.io.File;
 import java.io.IOException;
 import android.content.Context;
+import android.util.Log;
 
 public class Tool 
 {
@@ -52,7 +53,6 @@ public class Tool
 	
 	public void run( String args, OutputReceiver receiver ) throws IOException, InterruptedException {		
 		String cmd = null;
-		
 		if( mAppContext != null )
 			cmd = "cd " + mDirName + " && ./" + mName + " " + args;
 		else
@@ -67,7 +67,6 @@ public class Tool
 	
 	public Thread async( String args, OutputReceiver receiver ) {
 		String cmd = null;
-		
 		if( mAppContext != null )
 			cmd = "cd " + mDirName + " && ./" + mName + " " + args;
 		else

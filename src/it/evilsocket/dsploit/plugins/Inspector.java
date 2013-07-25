@@ -21,6 +21,7 @@ package it.evilsocket.dsploit.plugins;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.CheckBox;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -43,6 +44,7 @@ public class Inspector extends Plugin
 	private TextView     mDeviceServices = null;
 	private boolean      mRunning	  	 = false;
 	private Receiver	 mReceiver	  	 = null;
+	private CheckBox	 mAdvancedScan	 = null;
 	
 	private class Receiver extends InspectionReceiver
 	{
@@ -155,8 +157,8 @@ public class Inspector extends Plugin
 	private void setStartedState( ) {
 		mActivity.setVisibility( View.VISIBLE );
 		mRunning = true;
-		
-		System.getNMap().inpsect( System.getCurrentTarget(), mReceiver ).start();
+		mDeviceServices.setText("unknown");
+		System.getNMap().inpsect( System.getCurrentTarget(), mReceiver, mAdvancedScan.isChecked() ).start();
 	}
 	
 	@Override
@@ -169,6 +171,7 @@ public class Inspector extends Plugin
         mDeviceType 	= ( TextView)findViewById( R.id.deviceType ); 
         mDeviceOS   	= ( TextView)findViewById( R.id.deviceOS ); 
         mDeviceServices = ( TextView)findViewById( R.id.deviceServices ); 
+        mAdvancedScan		= (CheckBox)findViewById(R.id.advancedScan);
         
         mDeviceName.setText( System.getCurrentTarget().toString() );
         

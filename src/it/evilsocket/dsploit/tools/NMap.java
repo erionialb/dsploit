@@ -22,9 +22,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import it.evilsocket.dsploit.core.Shell.OutputReceiver;
+import it.evilsocket.dsploit.core.System;
 import it.evilsocket.dsploit.net.Target;
+import it.evilsocket.dsploit.net.Target.Port;
 import android.content.Context;
+//import android.net.wifi.WifiConfiguration.Protocol;
 import android.util.Log;
+import it.evilsocket.dsploit.net.Network.Protocol;
+
 
 public class NMap extends Tool 
 {
@@ -107,7 +112,6 @@ public class NMap extends Tool
 		private static final Pattern DEVICE_PATTERN       = Pattern.compile( "^Device\\s+type:\\s+(.+)$", Pattern.CASE_INSENSITIVE );
 		
 		public void onStart( String commandLine ) {
-			
 		}
 		
 		public void onNewLine( String line ) {			
@@ -145,7 +149,24 @@ public class NMap extends Tool
 		}
 	}
 	
-	public Thread inpsect( Target target, InspectionReceiver receiver ) {
-		return super.async( "-T4 -F -O -sV --privileged --send-ip --system-dns -vvv " + target.getCommandLineRepresentation(), receiver );
+	public Thread inpsect( Target target, InspectionReceiver receiver, boolean advanced_scan ) {
+		String tcp_ports,udp_ports; 
+		if(advanced_scan)
+		{
+			tcp_ports = "";
+			udp_ports = "";
+			for( Port p : target.getOpenPorts())
+				if(p.protocol.equals(Protocol.TCP))
+					tcp_ports += Integer.toString(p.number) + ",";
+				else if(p.protocol.equals(Protocol.UDP))
+					udp_ports += Integer.toString(p.number) + ",";
+			if(udp_ports.length()>0)
+				udp_ports = "U:" + udp_ports;
+			if(tcp_ports.length()>0)
+				tcp_ports = "T:" + tcp_ports;
+			return super.async( "-T4 -sV -O --privileged --send-ip --system-dns -vvv --max-retries 0 --version-trace -Pn -p " + tcp_ports + udp_ports + " " + target.getCommandLineRepresentation(), receiver );
+		}
+		else
+			return super.async( "-T4 -F -O -sV --privileged --send-ip --system-dns -vvv " + target.getCommandLineRepresentation(), receiver );
 	}
 }

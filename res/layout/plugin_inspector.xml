@@ -100,7 +100,6 @@
         android:layout_height="fill_parent"
         android:layout_alignLeft="@+id/textView3"
         android:layout_alignParentBottom="true"
-        android:layout_alignRight="@+id/deviceOS"
         android:layout_below="@+id/textView3" >
 
         <TextView
@@ -133,5 +132,15 @@
         android:paddingLeft="5dp"
         android:text="target"
         android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <CheckBox
+        android:id="@+id/advancedScan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/separator"
+        android:layout_alignTop="@+id/inspectToggleButton"
+        android:layout_toRightOf="@+id/inspectToggleButton"
+        android:checked="true"
+        android:text="advanced scan" />
 
 </RelativeLayout>
