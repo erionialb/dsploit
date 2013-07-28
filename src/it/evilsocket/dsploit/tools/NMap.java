@@ -104,40 +104,51 @@ public class NMap extends Tool
 	
 	public static abstract class InspectionReceiver implements OutputReceiver
 	{
-		private static final Pattern OPEN_PORT_PATTERN    = Pattern.compile( "^discovered open port (\\d+)/([^\\s]+).+", Pattern.CASE_INSENSITIVE );
-		private static final Pattern SERVICE_PATTERN  	  = Pattern.compile( "^(\\d+)/([a-z]+)\\s+[a-z]+\\s+[a-z]+\\s+(.*)$", Pattern.CASE_INSENSITIVE );		
-		private static final Pattern OS_PATTERN	   	      = Pattern.compile( "^Running:\\s+(.+)$", Pattern.CASE_INSENSITIVE );
-		private static final Pattern OS_GUESS_PATTERN 	  = Pattern.compile( "^Running\\s+\\(JUST\\s+GUESSING\\):\\s+(.+)$", Pattern.CASE_INSENSITIVE );
-		private static final Pattern SERVICE_INFO_PATTERN = Pattern.compile( "^Service\\s+Info:\\s+OS:\\s+([^;]+).*$", Pattern.CASE_INSENSITIVE );		
-		private static final Pattern DEVICE_PATTERN       = Pattern.compile( "^Device\\s+type:\\s+(.+)$", Pattern.CASE_INSENSITIVE );
+		private static final Pattern PORT_PATTERN 		  = Pattern.compile( "<port protocol=\"([^\"]+)\" portid=\"([^\"]+)\"><state state=\"open\"[^>]+><service.+product=\"([^\"]+)\" version=\"([^\"]+)\"", Pattern.CASE_INSENSITIVE);
+		private static final Pattern OS_PATTERN 		  = Pattern.compile( "<osclass type=\"([^\"]+)\".+osfamily=\"([^\"]+)\".+accuracy=\"([^\"]+)\"", Pattern.CASE_INSENSITIVE);
+		
+		private static final int 	proto = 1,
+									number = 2,
+									name = 3,
+									version = 4,
+									device_type = 1,
+									osfamily = 2,
+									accuracy = 3;
+		private static int last_accuracy;
 		
 		public void onStart( String commandLine ) {
+			last_accuracy=0;
 		}
 		
 		public void onNewLine( String line ) {			
 			Matcher matcher = null;
 			
-			if( ( matcher = OPEN_PORT_PATTERN.matcher(line) ) != null && matcher.find() )
-				onOpenPortFound( Integer.parseInt( matcher.group(1) ), matcher.group(2) );
-			
-			else if( ( matcher = SERVICE_PATTERN.matcher(line) ) != null && matcher.find() )
-				onServiceFound( Integer.parseInt( matcher.group(1) ),  matcher.group(2), matcher.group(3) );
-			
+			if((matcher = PORT_PATTERN.matcher(line)) != null && matcher.find())
+			{
+				int port_number = Integer.parseInt(matcher.group(number));
+				String protocol = matcher.group(proto);
+				
+				onOpenPortFound(port_number, protocol);
+				for( String _version : matcher.group(version).split("-"))
+				{
+					onServiceFound(port_number, protocol, matcher.group(name), _version);
+				}
+				
+			}
 			else if( ( matcher = OS_PATTERN.matcher(line) ) != null && matcher.find() )
-				onOsFound( matcher.group(1) );
-			
-			else if( ( matcher = OS_GUESS_PATTERN.matcher(line) ) != null && matcher.find() )
-				onGuessOsFound( matcher.group(1) );
-			
-			else if( ( matcher = DEVICE_PATTERN.matcher(line) ) != null && matcher.find() )
-				onDeviceFound( matcher.group(1).replace( "|", ",  ") );
-			
-			else if( ( matcher = SERVICE_INFO_PATTERN.matcher(line) ) != null && matcher.find() )
-				onServiceInfoFound( matcher.group(1) );
+			{
+				int found_accuracy;
+				if((found_accuracy = Integer.parseInt(matcher.group(accuracy))) > last_accuracy)
+				{
+					last_accuracy = found_accuracy;
+					onOsFound(matcher.group(osfamily));
+					onDeviceFound(matcher.group(device_type));
+				}
+			}
 		}
 		
 		public abstract void onOpenPortFound( int port, String protocol );
-		public abstract void onServiceFound( int port, String protocol, String service );
+		public abstract void onServiceFound( int port, String protocol, String service, String version );
 		public abstract void onOsFound( String os );
 		public abstract void onGuessOsFound( String os );
 		public abstract void onDeviceFound( String device );
@@ -164,9 +175,9 @@ public class NMap extends Tool
 				udp_ports = "U:" + udp_ports;
 			if(tcp_ports.length()>0)
 				tcp_ports = "T:" + tcp_ports;
-			return super.async( "-T4 -sV -O --privileged --send-ip --system-dns -vvv --max-retries 0 --version-trace -Pn -p " + tcp_ports + udp_ports + " " + target.getCommandLineRepresentation(), receiver );
+			return super.async( "-T4 -sV -O --privileged --send-ip --system-dns -Pn -oX - -p " + tcp_ports + udp_ports + " " + target.getCommandLineRepresentation(), receiver );
 		}
 		else
-			return super.async( "-T4 -F -O -sV --privileged --send-ip --system-dns -vvv " + target.getCommandLineRepresentation(), receiver );
+			return super.async( "-T4 -F -O -sV --privileged --send-ip --system-dns -oX - " + target.getCommandLineRepresentation(), receiver );
 	}
 }

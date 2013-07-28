@@ -1037,11 +1037,15 @@ public class System
 	}
 	
 	public static void addOpenPort( int port, Protocol protocol ) {
-		addOpenPort( port, protocol, null );
+		addOpenPort( port, protocol, null, null );
 	}
 	
 	public static void addOpenPort( int port, Protocol protocol, String service ) {
-		Port p = new Port( port, protocol, service );
+		addOpenPort(port, protocol, service, null);
+	}
+	
+	public static void addOpenPort( int port, Protocol protocol, String service, String version ) {
+		Port p = new Port( port, protocol, service, version );
 		
 		getCurrentTarget().addOpenPort( p );
 		
@@ -1058,11 +1062,11 @@ public class System
 		}
 	}
 	
-	public static void addExploit( Exploit ex ) {
-		getCurrentTarget().addExploit(ex);
+	public static void addExploit( Vulnerability v, Exploit ex) {
+		getCurrentTarget().addExploit( v, ex );
 		
 		for( Plugin plugin : getPluginsForTarget() ) {
-			plugin.onTargetNewExploit( getCurrentTarget(), ex );
+			plugin.onTargetNewExploit( getCurrentTarget(), v, ex );
 		}
 	}
 	

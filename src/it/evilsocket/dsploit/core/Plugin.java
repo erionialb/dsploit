@@ -120,6 +120,10 @@ public abstract class Plugin extends SherlockActivity
 	public void onTargetNewVulnerability( Target target, Port port, Vulnerability vulnerability ) {
 		
 	}
+	
+	public void onTargetNewExploit( Target target, Vulnerability vulnerability, Exploit ex ) {
+		
+	}
 
 	public void onTargetNewExploit( Target target, Exploit ex ) {
 		

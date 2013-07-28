@@ -103,8 +103,8 @@ public class NVDatabase
 					Vulnerability cve = new Vulnerability();
 					
 					cve.setIdentifier( identifiers.get(i) );
-					cve.setSummary( summaries.get(i) );
-					cve.setSeverity( Double.parseDouble( severities.get(i) ) );
+					cve.summary = summaries.get(i);
+					cve.severity =Double.parseDouble( severities.get(i) );
 					
 					results.add( cve );
 				}	

@@ -19,6 +19,7 @@
 package it.evilsocket.dsploit.plugins;
 
 import it.evilsocket.dsploit.net.Target.Vulnerability;
+import it.evilsocket.dsploit.net.Target.Exploit;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -37,66 +38,39 @@ import android.util.Log;
 public class OSVDatabase 
 {	
 	private final static Pattern ID_PATTERN       = Pattern.compile( "<a href=\"/show/osvdb/([0-9]+)",		Pattern.MULTILINE | Pattern.DOTALL );
-	private final static Pattern SUMMARY_PATTERN  = Pattern.compile( "[0-9]{4}-[0-9]{2}-[0-9]{2}</td><td>(<a[^>]*>)?([^<]+)",		Pattern.MULTILINE | Pattern.DOTALL );
-	private final static Pattern DESC_PATTERN  	  = Pattern.compile( "<p id=\"desc[0-9]+\"[^>]+>([^<]*)",	Pattern.MULTILINE | Pattern.DOTALL );
-	//private final static Pattern SEVERITY_PATTERN = Pattern.compile( "<td[^>]+>([0-9]{1,2}\\.[0-9])?</td>",	Pattern.MULTILINE | Pattern.DOTALL );
+	private final static Pattern SUMMARY_PATTERN  	  = Pattern.compile( "<title>[0-9]+: ([^<]+)",	Pattern.MULTILINE | Pattern.DOTALL );
+	private final static Pattern SEVERITY_PATTERN = Pattern.compile( "CVSSv2 Base Score = ([0-9]{1,2}\\.[0-9])",	Pattern.MULTILINE | Pattern.DOTALL );
+	private final static Pattern MSF_PATTERN	  = Pattern.compile("href=\"http://metasploit.org/modules/framework/search?", Pattern.MULTILINE | Pattern.DOTALL);
+	private final static Pattern PAGES_CHECK	  = Pattern.compile("<div class=\"pagination\">", Pattern.MULTILINE | Pattern.DOTALL);
 	private final static Pattern PAGES_PATTERN	  = Pattern.compile("<div class=\"pagination\">((?!</div>).)+", Pattern.MULTILINE | Pattern.DOTALL);
 	private final static Pattern PAGE_NUMS		  = Pattern.compile("page=([0-9]+)", Pattern.MULTILINE | Pattern.DOTALL);
 	private final static String  APPEND_REQUEST   = "&search[text_type]=alltext&search[s_date]=&search[e_date]=&search[refid]=&search[referencetypes]=&search[vendors]=&search[cvss_score_from]=&search[cvss_score_to]=&search[cvss_av]=*&search[cvss_ac]=*&search[cvss_a]=*&search[cvss_ci]=*&search[cvss_ii]=*&search[cvss_ai]=*&kthx=search";
 	
-	private static ArrayList<Vulnerability> parse_body(String body)
+	private static ArrayList<Integer> parse_response(String body)
 	{
-		ArrayList<String> identifiers = new ArrayList<String>(),
-						  summaries	  = new ArrayList<String>(),
-						  descriptions= new ArrayList<String>(),
-						  severities  = new ArrayList<String>();
-		ArrayList<Vulnerability> vulns = new ArrayList<Vulnerability>();
+		ArrayList<Integer> identifiers = new ArrayList<Integer>();
 		Matcher matcher = null;
-		Vulnerability osv;
+		if((matcher = ID_PATTERN.matcher(body)) != null) {
+			while( matcher.find()) {
+				identifiers.add(Integer.parseInt(matcher.group(1)));
+			}
+		}
+		return identifiers;
+	}
+	
+	private static Vulnerability parse_vuln(String body, Integer id)
+	{
+		Matcher matcher;
+		Vulnerability osv = new Vulnerability();
+		osv.osvdb_id = id;
 		
-		if( ( matcher = ID_PATTERN.matcher(body) ) != null )
-		{
-			while( matcher.find() )
-			{
-				identifiers.add( matcher.group(1) );
-			}
-			
-			if( ( matcher = SUMMARY_PATTERN.matcher(body) ) != null )
-			{
-				while( matcher.find() )
-				{
-					summaries.add( matcher.group(matcher.groupCount()) );
-				}
-				if((matcher = DESC_PATTERN.matcher(body)) != null)
-				{
-					while(matcher.find())
-					{
-						descriptions.add(matcher.group(1));
-					}
-					/* TODO: use cookies and Ajax for get ranking...
-					if( ( matcher = SEVERITY_PATTERN.matcher(body) ) != null )
-					{
-						while( matcher.find() )
-						{
-							severities.add( matcher.group(1) );
-						}									
-					}
-					*/
-				}
-			}
-		}
-		if(identifiers.size() != summaries.size() || summaries.size() != descriptions.size() /*|| descriptions.size() != severities.size()*/)
-		{
-			Log.d("OSVDatabase","sizemismatch - "+identifiers.size()+" "+summaries.size()+" "+descriptions.size()+" "+severities.size());
-			return null;
-		}
-		for(int i = 0;i<identifiers.size();i++)
-		{
-			osv = new Vulnerability();
-			osv.from_osvdb(Integer.parseInt(identifiers.get(i)),0.0/*Double.parseDouble(severities.get(i))*/,summaries.get(i)+" - "+descriptions.get(i));
-			vulns.add(osv);
-		}
-		return vulns;
+		if((matcher = SUMMARY_PATTERN.matcher(body)) != null && matcher.find())
+			osv.summary = matcher.group(1);
+		if((matcher = SEVERITY_PATTERN.matcher(body)) != null && matcher.find())
+			osv.severity = Double.parseDouble(matcher.group(1));
+		 if((matcher = MSF_PATTERN.matcher(body))!=null && matcher.find())
+			osv.has_msf_exploit = true;
+		return osv;
 	}
 	
 	private static int get_lastpage_index(String body)
@@ -105,6 +79,10 @@ public class OSVDatabase
 		String tmp;
 		int i,j;
 		
+		// this is a quick way to check ( no negative look-ahead )
+		if((matcher = PAGES_CHECK.matcher(body)) == null || !matcher.find())
+			return 0;
+		// this should never happens
 		if((matcher = PAGES_PATTERN.matcher(body)) == null || !matcher.matches())
 			return 0;
 		tmp = matcher.group(1);
@@ -130,12 +108,25 @@ public class OSVDatabase
 			connection = new URL( "http://osvdb.org/search/search?" + query ).openConnection();
 		reader = new BufferedReader( new InputStreamReader( connection.getInputStream() ) );
 		while( ( line = reader.readLine() ) != null )
-		{
 			body += line;
-		}
 		
 		reader.close();
 		
+		return body;
+	}
+	
+	private static String read_vuln(int id) throws IOException
+	{
+		URLConnection connection;
+		BufferedReader reader;
+		String line,body;
+		
+		body = "";
+		connection = new URL( "http://osvdb.org/show/osvdb/"+ Integer.toString(id)).openConnection();
+		reader = new BufferedReader( new InputStreamReader(connection.getInputStream()));
+		while((line = reader.readLine()) != null)
+			body+= line;
+		reader.close();
 		return body;
 	}
 	
@@ -159,13 +150,19 @@ public class OSVDatabase
 			cur_page=0;
 			body = get_response(query, cur_page);
 			last_page = get_lastpage_index(body);
+			for(int id : parse_response(body)) {
+				body = read_vuln(id);
+				results.add(parse_vuln(body, id));
+			}
 			Log.d("OSVDatabase","last_index = "+last_page);
-			results.addAll(parse_body(body));
 			cur_page++;
 			while(cur_page<last_page)
 			{
 				body=get_response(query, cur_page++);
-				results.addAll(parse_body(body));
+				for(int id : parse_response(body)) {
+					body = read_vuln(id);
+					results.add(parse_vuln(body, id));
+				}
 			}
 		}
 		catch( MalformedURLException mue )

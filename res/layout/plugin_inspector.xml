@@ -141,6 +141,6 @@
         android:layout_alignTop="@+id/inspectToggleButton"
         android:layout_toRightOf="@+id/inspectToggleButton"
         android:checked="true"
-        android:text="advanced scan" />
+        android:text="focused scan" />
 
 </RelativeLayout>
