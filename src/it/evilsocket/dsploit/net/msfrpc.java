@@ -1,13 +1,20 @@
 package it.evilsocket.dsploit.net;
 
+import it.evilsocket.dsploit.core.System;
+
+import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.Socket;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -22,6 +29,8 @@ import org.msgpack.type.Value;
 import org.msgpack.unpacker.Unpacker;
 import org.msgpack.unpacker.Converter;
 
+import android.util.Log;
+
 //TODO: add license and write down that we had taken part of this code from armitage
 
 @SuppressWarnings("rawtypes")
@@ -32,6 +41,8 @@ public class msfrpc
 	private String token;
 	private MessagePack msgpack;	
 	private Map callCache = new HashMap();
+	private final static String TAG = "MSFRPC";
+	private final Lock lock = new ReentrantLock();
 	
 	public msfrpc(String host, String username, String password, int port, boolean ssl) throws MalformedURLException
 	{
@@ -80,12 +91,54 @@ public class msfrpc
 		token = results.get("token").toString();
 	}
 	
+	public static boolean isDaemonRunning(String host, int port)
+	{
+		Socket socket = new Socket();
+		try
+		{
+			socket.connect(new InetSocketAddress(host, port), 100);
+			socket.close();
+			return true;
+		}
+		catch ( Exception ex)
+		{
+			return false;
+		}
+	}
+	
+	public static boolean startDaemon()
+	{
+		try
+		{
+			String 			chroot_path	= System.getSettings().getString("MSF_CHROOT_PATH", "/data/gentoo");
+			Process 		process		= new ProcessBuilder().command("su").start();
+			DataOutputStream writer  = null;
+					
+			writer = new DataOutputStream( process.getOutputStream() );
+			
+			writer.writeBytes("chroot \"" + chroot_path + "\" /bin/su\n");
+			writer.flush();
+			writer.writeBytes("msfrpcd4.4 -P \"" + System.getSettings().getString("MSF_RPC_PSWD", "pswd") + "\" -U \"" + System.getSettings().getString("MSF_RPC_USER", "msf") + "\" -a 127.0.0.1 -n -t Msg\n");
+			writer.flush();
+			writer.writeBytes("exit\nexit\n");
+			writer.flush();
+			return (process.waitFor() == 0);
+		}
+		catch( Exception ex)
+		{
+			Log.w(TAG, "unable to start msfrpcd.", ex);
+			return false;
+		}
+	}
+	
 	@SuppressWarnings("unchecked")
 	protected Map exec (String methname, Object[] params) {
 		try {
 			synchronized(this) {
+				lock.lock();
 				writeCall(methname, params);
 				Object response = readResp();
+				lock.unlock();
 				if (response instanceof Map) {
 					return (Map)response;
 				}
@@ -101,6 +154,10 @@ public class msfrpc
 		}
 		catch (Exception ex) { 
 			throw new RuntimeException(ex);
+		}
+		finally
+		{
+			lock.unlock();
 		}
 	}
 	

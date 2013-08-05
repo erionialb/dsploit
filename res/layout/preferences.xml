@@ -20,11 +20,6 @@
             android:summary="Global save path to put every log file."
             android:title="Save Path" />
         
-        <Preference
-            android:key="PREF_CHROOT_PATH"
-            android:summary="Path to MSF system image"
-            android:title="Chroot Path" />
-        
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="PREF_DEBUG_ERROR_LOGGING"
@@ -102,6 +97,28 @@
             android:key="SEARCH_MSF_ONLY"
             android:summary="Search only for metasploit exploits."
             android:title="Search only MSF exploits" />
+        
+    </PreferenceCategory>
+    
+   	<PreferenceCategory android:title="MetasploitFramework" >
+        
+        <EditTextPreference
+            android:defaultValue="/data/gentoo_msf"
+            android:key="MSF_CHROOT_PATH"
+            android:summary="Path to MSF system image"
+            android:title="Chroot Path" />
+   	            
+        <EditTextPreference
+            android:defaultValue="msf"
+            android:key="MSF_RPC_USER"
+            android:summary="the username for login into MSF."
+            android:title="username" />
+        
+        <EditTextPreference
+            android:defaultValue="msf"
+            android:key="MSF_RPC_PSWD"
+            android:summary="the password to login into MSF."
+            android:title="password" />
         
     </PreferenceCategory>
 
