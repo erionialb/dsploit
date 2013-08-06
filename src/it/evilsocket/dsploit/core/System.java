@@ -78,6 +78,7 @@ import it.evilsocket.dsploit.net.Target.Exploit;
 import it.evilsocket.dsploit.net.Target.Port;
 import it.evilsocket.dsploit.net.Target.Type;
 import it.evilsocket.dsploit.net.Target.Vulnerability;
+import it.evilsocket.dsploit.net.msfrpc;
 import it.evilsocket.dsploit.net.http.RequestParser;
 import it.evilsocket.dsploit.net.http.proxy.HTTPSRedirector;
 import it.evilsocket.dsploit.net.http.proxy.Proxy;
@@ -136,6 +137,8 @@ public class System
 	private static String				 mSessionName	= null;
 	
 	private static Object				 mCustomData	= null;
+	
+	private static msfrpc				mMsfRpc			= null;
 
 	public static void init( Context context ) throws Exception {
 		mContext = context;		
@@ -203,7 +206,8 @@ public class System
 			mTargets.add( network );
 			mTargets.add( gateway );
 			mTargets.add( device );
-									
+			
+			mMsfRpc = new msfrpc("127.0.0.1", "msf", "pswd", 55553, true);
 			mInitialized = true;
 		}		
 		catch( Exception e )

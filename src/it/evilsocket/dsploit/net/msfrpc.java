@@ -5,6 +5,7 @@ import it.evilsocket.dsploit.core.System;
 import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Socket;
@@ -12,7 +13,9 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -23,7 +26,7 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import org.msgpack.*;
+import org.msgpack.MessagePack;
 import org.msgpack.packer.Packer;
 import org.msgpack.type.Value;
 import org.msgpack.unpacker.Unpacker;
@@ -43,8 +46,10 @@ public class msfrpc
 	private Map callCache = new HashMap();
 	private final static String TAG = "MSFRPC";
 	private final Lock lock = new ReentrantLock();
+	private Thread connector;
+	public static boolean daemonRunning,loggedIn;
 	
-	public msfrpc(String host, String username, String password, int port, boolean ssl) throws MalformedURLException
+	public msfrpc(final String host, final String username, final String password, final int port, boolean ssl) throws MalformedURLException
 	{
 		if (ssl) { // Install the all-trusting trust manager & HostnameVerifier
 			try {
@@ -79,16 +84,46 @@ public class msfrpc
 		}
 		
 		msgpack = new MessagePack();
-
-		/* login to msf server */
-		Map results = exec("auth.login",new Object[]{ username, password });
-
-		/* save the temp token (lasts for 5 minutes of inactivity) */
-		token = results.get("token").toString();
-
-		/* generate a non-expiring token and use that */
-		results = exec("auth.token_generate", new Object[]{ token });
-		token = results.get("token").toString();
+		
+		connector = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try
+				{
+				while(!(daemonRunning = isDaemonRunning(host, port)))
+					Thread.sleep(500);
+				while(!(loggedIn = login(username,password)))
+					Thread.sleep(500);
+				}
+				catch ( Exception ex)
+				{
+					return;
+				}
+			}
+		});
+		
+		connector.start();
+	}
+	
+	private boolean login ( String username, String password) 
+	{
+		try
+		{
+			/* login to msf server */
+			Map results = exec("auth.login",new Object[]{ username, password });
+	
+			/* save the temp token (lasts for 5 minutes of inactivity) */
+			token = results.get("token").toString();
+	
+			/* generate a non-expiring token and use that */
+			results = exec("auth.token_generate", new Object[]{ token });
+			token = results.get("token").toString();
+			return true;
+		}
+		catch ( Exception ex)
+		{
+			return false;
+		}
 	}
 	
 	public static boolean isDaemonRunning(String host, int port)
@@ -171,10 +206,14 @@ public class msfrpc
 		OutputStream os = huc.getOutputStream();
 		Packer pk = msgpack.createPacker(os);
 		pk.write(methodName);
-		pk.write(args);
+		pk.writeArrayBegin(args.length);
+		for(int i = 0; i < args.length;i++)
+			pk.write(args[i]);
 		pk.close();
 		os.close();
 	}
+	
+
 	
 	protected Object readResp() throws Exception {
 		InputStream is = huc.getInputStream();
