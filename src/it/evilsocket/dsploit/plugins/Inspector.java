@@ -168,7 +168,7 @@ public class Inspector extends Plugin
 			for(Port port : System.getCurrentTarget().getOpenPorts()) {
             	if( port.service!=null && !port.service.isEmpty() )
             		if( port.version!=null && !port.version.isEmpty() )
-            			mDeviceServices.append( port.number + " ( " + port.protocol.toString() + " ) : " + port.service + " - v" + port.version +  "\n" );
+            			mDeviceServices.append( port.number + " ( " + port.protocol.toString() + " ) : " + port.service + " - " + port.version +  "\n" );
             		else
             			mDeviceServices.append( port.number + " ( " + port.protocol.toString() + " ) : " + port.service + "\n" );
 			}
@@ -205,8 +205,8 @@ public class Inspector extends Plugin
         	mDeviceOS.setText( System.getCurrentTarget().getDeviceOS() );
         
         write_services();
-        mAdvancedScan.setEnabled(false);
-        mAdvancedScan.setClickable(System.getCurrentTarget().hasOpenPorts());
+        mAdvancedScan.setEnabled(System.getCurrentTarget().hasOpenPorts());
+        mAdvancedScan.setClickable(mAdvancedScan.isEnabled());
         
         mStartButton.setOnClickListener( new OnClickListener(){
 			@Override
