@@ -37,6 +37,8 @@ import android.util.Log;
 public class Target 
 {
 	private static final String TAG = "TARGET";
+	// remove "dev" "rc" and other extra version infos
+	private final static Pattern VERSION_PATTERN       = Pattern.compile( "(([0-9]+\\.)+[0-9]+)[a-zA-Z]+");
 	
 	public enum Type {
 		NETWORK,
@@ -86,13 +88,17 @@ public class Target
 		
 		public String getServiceQuery() {
 			String query = "";
+			Matcher matcher	  = null;
 			
 			if( service != null )
 			{
 				query += service;
 				
 				if(version!=null)
-					query+=" "+ version;
+					if((matcher = VERSION_PATTERN.matcher(version)) != null && matcher.find())
+						query+=" "+matcher.group(1);
+					else
+						query+=" "+ version;
 			}
 			
 			return query;
@@ -242,7 +248,9 @@ public class Target
 		}
 
 		public int getDrawableResourceId() {
-			return R.drawable.target_endpoint;
+			if(msf_name!=null)
+				return R.drawable.exploit_msf;
+			return R.drawable.exploit;
 		}
 
 		public String getDescription() {
@@ -697,7 +705,8 @@ public class Target
 			{
 				if( port.service != null )
 					mPorts.get(i).service = port.service;
-				
+				if( port.version != null )
+					mPorts.get(i).version = port.version;
 				return;
 			}
 		}
