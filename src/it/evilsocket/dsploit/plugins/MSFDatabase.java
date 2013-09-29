@@ -18,7 +18,7 @@ public class MSFDatabase
 		
 		try
 		{
-			query = "http://www.metasploit.com/modules/framework/search?" + encoded_query;
+			query = "http://www.rapid7.com/db/search?q=" + encoded_query + "&t=m";
 			URL obj = new URL(query);
 			connection = obj.openConnection();
 			connection.getHeaderField("Location"); // this will resolve connection
@@ -51,14 +51,14 @@ public class MSFDatabase
 	//Search by cve
 	public static Exploit search_by_cve( String query )
 	{
-		return search("cve="+query);
+		return search(query);
 	}
 	
 	
 	//Search by osvdb
 	public static Exploit search_by_osvdb( int data )
 	{
-		return search("osvdb=" + data);
+		return search("" + data);
 	}
 	
 	
