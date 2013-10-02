@@ -2,6 +2,7 @@
  * This file is part of the dSploit.
  *
  * Copyleft of Simone Margaritelli aka evilsocket <evilsocket@gmail.com>
+ *             Massimo Dragano aka tux_mind <massimo.dragano@gmail.com>
  *
  * dSploit is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

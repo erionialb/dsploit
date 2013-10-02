@@ -2,6 +2,7 @@
  * This file is part of the dSploit.
  *
  * Copyleft of Simone Margaritelli aka evilsocket <evilsocket@gmail.com>
+ *             Massimo Dragano aka tux_mind <massimo.dragano@gmail.com>
  *
  * dSploit is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +45,7 @@ import it.evilsocket.dsploit.net.Network;
 import it.evilsocket.dsploit.net.NetworkDiscovery;
 import it.evilsocket.dsploit.net.Target;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -74,6 +76,7 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.bugsense.trace.BugSenseHandler;
 
+@SuppressLint("NewApi")
 public class MainActivity extends SherlockListActivity
 {	
 	private static final int    WIFI_CONNECTION_REQUEST = 1012;
