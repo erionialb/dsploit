@@ -185,7 +185,7 @@ public class System
 	    		HTTP_SERVER_PORT = 8081; 
 	    		HTTPS_REDIR_PORT = 8082;
 	    	}
-											
+			
 			mNmap     = new NMap( mContext );
 			mArpSpoof = new ArpSpoof( mContext );
 			mEttercap = new Ettercap( mContext );
@@ -207,7 +207,6 @@ public class System
 			mTargets.add( gateway );
 			mTargets.add( device );
 			
-			mMsfRpc = new msfrpc("127.0.0.1", "msf", "pswd", 55553, true);
 			mInitialized = true;
 		}		
 		catch( Exception e )
@@ -804,6 +803,15 @@ public class System
 	
 	public static TcpDump getTcpDump() {
 		return mTcpdump;
+	}
+	
+	public static msfrpc getMsfRpc() {
+		return mMsfRpc;
+	}
+	
+	public static void setMsfRpc(msfrpc value)
+	{
+		mMsfRpc = value;
 	}
 	
 	public static Proxy getProxy() {

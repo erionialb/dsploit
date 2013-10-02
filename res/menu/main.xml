@@ -13,6 +13,7 @@
   </group>
   <group android:id="@+id/misc_group">
 	  <item android:id="@+id/ss_monitor"      android:title="Stop Network Monitor"/>
+	  <item android:id="@+id/ss_msfrpcd" 	  android:title="Stop msfrpcd"/>
 	  <item android:id="@+id/submit_issue"    android:title="Submit Issue" />  
 	  <item android:id="@+id/about"           android:title="About" />
   </group>

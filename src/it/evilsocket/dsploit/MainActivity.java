@@ -39,6 +39,7 @@ import it.evilsocket.dsploit.gui.dialogs.InputDialog.InputDialogListener;
 import it.evilsocket.dsploit.gui.dialogs.SpinnerDialog;
 import it.evilsocket.dsploit.gui.dialogs.SpinnerDialog.SpinnerDialogListener;
 import it.evilsocket.dsploit.net.Endpoint;
+import it.evilsocket.dsploit.net.MsfRpcd;
 import it.evilsocket.dsploit.net.Network;
 import it.evilsocket.dsploit.net.NetworkDiscovery;
 import it.evilsocket.dsploit.net.Target;
@@ -83,8 +84,10 @@ public class MainActivity extends SherlockListActivity
 	private TargetAdapter  	 mTargetAdapter   	     = null;
 	private NetworkDiscovery mNetworkDiscovery		 = null;
 	private UpdateChecker	 mUpdateChecker			 = null;
+	private MsfRpcd			 mMsfRpcd				 = null;
 	private EndpointReceiver mEndpointReceiver 		 = null;
-	private UpdateReceiver	 mUpdateReceiver		 = null;	
+	private UpdateReceiver	 mUpdateReceiver		 = null;
+	private MsfrpcdReceiver  mMsfRpcdReceiver		 = null;
 	private Menu			 mMenu					 = null;
 	private TextView		 mUpdateStatus			 = null;
 	private Toast 			 mToast 			 	 = null;
@@ -208,6 +211,77 @@ public class MainActivity extends SherlockListActivity
                     }
                 });		
 			}					
+		}
+	}
+	
+	private class MsfrpcdReceiver extends ManagedReceiver
+	{
+		private IntentFilter mFilter = null;
+		
+		public MsfrpcdReceiver() {
+			mFilter = new IntentFilter();
+			
+			mFilter.addAction( MsfRpcd.STARTING );
+			mFilter.addAction( MsfRpcd.STARTED );
+			mFilter.addAction( MsfRpcd.RUNNING );
+			mFilter.addAction( MsfRpcd.STOPPED );
+			mFilter.addAction( MsfRpcd.FAILED );
+		}
+		
+		public IntentFilter getFilter( ) {
+			return mFilter;
+		}
+		
+		@Override
+		public void onReceive( Context context, Intent intent ) 
+		{
+			MenuItem item = mMenu.findItem( R.id.ss_msfrpcd );
+			
+			if( intent.getAction().equals( MsfRpcd.FAILED ) )
+			{
+				final String message = ( String )intent.getExtras().get( MsfRpcd.ERROR );
+				MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    	new ErrorDialog("MsfRpcd error", message, MainActivity.this);
+                    }
+                });
+				item.setEnabled( false );
+				item.setTitle("msfrpcd KO");
+            	MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    	Toast.makeText( MainActivity.this, "unable to connect to msfrpcd, check settings", Toast.LENGTH_SHORT ).show();
+                    }
+                });
+			}
+			else
+			{
+				String status = "";
+				String action = "Stop";
+				mMenu.findItem( R.id.ss_msfrpcd ).setEnabled( true );
+				
+				if(intent.getAction().equals( MsfRpcd.STARTING))
+					status = "Starting MsfRpcd";
+				else if(intent.getAction().equals( MsfRpcd.STARTED))
+					status = "MsfRpcd started";
+				else if(intent.getAction().equals(MsfRpcd.RUNNING))
+					status = "MsfRpcd is already running";
+				else if(intent.getAction().equals( MsfRpcd.STOPPED))
+				{
+					status = "MsfRpcd stopped";
+					action = "Start";
+				}
+				item.setTitle(action + " msfrpcd");
+				item.setEnabled(true); // should never change...
+				final String final_status = status;
+            	MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    	Toast.makeText( MainActivity.this, final_status, Toast.LENGTH_SHORT ).show();
+                    }
+                });
+			}
 		}
 	}
 	
@@ -388,14 +462,20 @@ public class MainActivity extends SherlockListActivity
 		if( mUpdateReceiver == null )
 			mUpdateReceiver = new UpdateReceiver();
 		
+		if( mMsfRpcdReceiver == null)
+			mMsfRpcdReceiver = new MsfrpcdReceiver();
+		
 	    mEndpointReceiver.unregister();
 	    mUpdateReceiver.unregister();
+	    mMsfRpcdReceiver.unregister();
 	    
 	    mEndpointReceiver.register( MainActivity.this );		
         mUpdateReceiver.register( MainActivity.this );
+        mMsfRpcdReceiver.register( MainActivity.this);
         
         startUpdateChecker();
         startNetworkDiscovery( false );
+        StartMsfRpcd();
         
         // if called for the second time after wifi connection
         invalidateOptionsMenu();
@@ -536,7 +616,7 @@ public class MainActivity extends SherlockListActivity
 			menu.findItem( R.id.restore_session ).setEnabled( false );
 			menu.findItem( R.id.settings ).setEnabled( false );
 			menu.findItem( R.id.ss_monitor ).setEnabled( false );
-			menu.findItem( R.id.ss_monitor ).setEnabled( false );
+			menu.findItem( R.id.ss_msfrpcd ).setEnabled( false );
 		}
 		
 		mMenu = menu;
@@ -553,6 +633,13 @@ public class MainActivity extends SherlockListActivity
 		
 		else				
 			item.setTitle( "Start Network Monitor" );
+		
+		item = menu.findItem(R.id.ss_msfrpcd);
+		
+		if(System.getMsfRpc()!=null)
+			item.setTitle("Stop msfrpcd");
+		else
+			item.setTitle("Start msfrpcd");
 		
 		mMenu = menu;
 						
@@ -597,6 +684,44 @@ public class MainActivity extends SherlockListActivity
 			}
 			
 			mNetworkDiscovery = null;
+		}
+	}
+	
+	public void StartMsfRpcd()
+	{
+		try
+		{
+			if(mMsfRpcd!=null)
+			{
+				mMsfRpcd.exit();
+				mMsfRpcd.join();
+				mMsfRpcd = null;
+			}
+		}
+		catch ( InterruptedException ie)
+		{
+			// woop
+		}
+		mMsfRpcd = new MsfRpcd(this, 55553);
+		mMsfRpcd.start();
+	}
+	
+	public void StopMsfRpcd()
+	{
+		try
+		{
+			if(mMsfRpcd!=null)
+			{
+				mMsfRpcd.exit();
+				mMsfRpcd.join();
+				mMsfRpcd = null;
+			}
+			System.setMsfRpc(null);
+			Shell.exec("killall msfrpcd");
+		}
+		catch ( Exception e)
+		{
+			// woop
 		}
 	}
 	
@@ -776,6 +901,20 @@ public class MainActivity extends SherlockListActivity
 			
 			return true;
 		}
+		else if( itemId == R.id.ss_msfrpcd )
+		{
+			if(System.getMsfRpc()!=null)
+			{
+				StopMsfRpcd();
+				item.setTitle("Start msfrpcd");
+			}
+			else
+			{
+				StartMsfRpcd();
+				item.setTitle("Stop msfrpcd");
+			}
+			return true;
+		}
 		else if( itemId == R.id.submit_issue )
 		{
 			String uri     = "https://github.com/evilsocket/dsploit/issues/new";
@@ -847,12 +986,16 @@ public class MainActivity extends SherlockListActivity
 	@Override
 	public void onDestroy() {
 		stopNetworkDiscovery( true );
+		StopMsfRpcd();
 					
 		if( mEndpointReceiver != null )
 			mEndpointReceiver.unregister();
 		
 		if( mUpdateReceiver != null )
 			mUpdateReceiver.unregister();
+		
+		if(mMsfRpcdReceiver != null)
+			mMsfRpcdReceiver.unregister();
 				
 		// make sure no zombie process is running before destroying the activity
 		System.clean( true );	
